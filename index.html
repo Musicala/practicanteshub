@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0C41C4" />
+  <title>Practicantes · Musicala</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <!-- ===== LOGIN ===== -->
+  <main class="wrap" id="view-login" hidden>
+    <section class="loginCard" aria-label="Inicio de sesión">
+      <div class="loginBrand">
+        <div class="mark" aria-hidden="true">
+          <img class="markImg" src="./logo.png" alt="Musicala"
+               onerror="this.style.display='none'; this.parentElement.classList.add('fallback');" />
+          <div class="markFallback" aria-hidden="true">🎶</div>
+        </div>
+        <div class="brandText">
+          <h1 class="brandTitle">Musicala</h1>
+          <p class="brandSub">Practicantes · Educación Artística</p>
+        </div>
+      </div>
+
+      <div class="loginActions">
+        <button class="btnGoogle" id="btn-google" type="button">
+          <span class="gIcon" aria-hidden="true">G</span>
+          Entrar con Google
+        </button>
+        <p class="loginHint">Usa tu cuenta autorizada por Musicala 🙂</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== APP ===== -->
+  <main class="wrap" id="view-app" hidden>
+    <header class="top">
+      <div class="brand">
+        <div class="logoWrap" aria-hidden="true">
+          <img class="logoImg" src="./logo.png" alt=""
+               onerror="this.style.display='none'; this.parentElement.classList.add('fallback');" />
+          <div class="logoFallback" aria-hidden="true">🎓</div>
+        </div>
+        <div class="brandCopy">
+          <h2>Practicantes · Musicala</h2>
+          <p id="user-line">Accesos rápidos</p>
+        </div>
+
+        <button class="btnGhost" id="btn-logout" type="button" title="Salir">
+          Salir
+        </button>
+      </div>
+    </header>
+
+    <section class="grid" id="grid" aria-label="Accesos"></section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
