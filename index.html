@@ -4,6 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#0C41C4" />
+
+  <meta name="description" content="Hub de accesos para practicantes en Musicala (login con Google)." />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <title>Practicantes · Musicala</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
@@ -28,6 +36,10 @@
           <span class="gIcon" aria-hidden="true">G</span>
           Entrar con Google
         </button>
+
+        <button class="btnGhost" id="btn-install" type="button" hidden>
+          Instalar app
+        </button>
         <p class="loginHint">Usa tu cuenta autorizada por Musicala 🙂</p>
       </div>
     </section>
@@ -46,6 +58,10 @@
           <h2>Practicantes · Musicala</h2>
           <p id="user-line">Accesos rápidos</p>
         </div>
+
+        <button class="btnGhost" id="btn-install-2" type="button" title="Instalar" hidden>
+          Instalar
+        </button>
 
         <button class="btnGhost" id="btn-logout" type="button" title="Salir">
           Salir
