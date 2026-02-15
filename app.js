@@ -8,7 +8,7 @@
    1) Firebase Config (YA LISTO)
 =========== */
 const firebaseConfig = {
-  apiKey: "AIzaSyAPD7wWampYtzQpXigMwKDnhxbV2O_AYOA",
+  apiKey: "AIzaSyChJRB7GzGJeeE3EQ_yCoVISQpBf5N-m_8",
   authDomain: "practicantes-hub.firebaseapp.com",
   projectId: "practicantes-hub",
   storageBucket: "practicantes-hub.firebasestorage.app",
