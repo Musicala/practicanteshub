@@ -90,6 +90,103 @@ function show(which) {
   }
 }
 
+
+/* ===========
+   PWA: install + SW
+=========== */
+let __deferredInstallPrompt = null;
+
+function isIOS() {
+  const ua = navigator.userAgent || "";
+  return /iphone|ipad|ipod/i.test(ua);
+}
+function isStandalone() {
+  // iOS Safari
+  if (window.navigator.standalone) return true;
+  // Modern browsers
+  return window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+}
+
+function setInstallUI(visible) {
+  const b1 = document.getElementById("btn-install");
+  const b2 = document.getElementById("btn-install-2");
+  if (b1) b1.hidden = !visible;
+  if (b2) b2.hidden = !visible;
+}
+
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+
+  try {
+    const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+
+    // Si hay update, aplica “refresh” suave
+    reg.addEventListener("updatefound", () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener("statechange", () => {
+        if (sw.state === "installed" && navigator.serviceWorker.controller) {
+          // Hay una nueva versión lista
+          toast("Actualización lista ✅ Cierra y vuelve a abrir la app");
+        }
+      });
+    });
+  } catch (e) {
+    console.warn("SW no se pudo registrar", e);
+  }
+}
+
+function setupInstallPrompt() {
+  // Si ya está instalada, no molestamos
+  if (isStandalone()) {
+    setInstallUI(false);
+    return;
+  }
+
+  // Android/Chromium: evento nativo
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    __deferredInstallPrompt = e;
+    setInstallUI(true);
+  });
+
+  // Cuando se instala
+  window.addEventListener("appinstalled", () => {
+    __deferredInstallPrompt = null;
+    setInstallUI(false);
+    toast("Instalada ✨");
+  });
+
+  // Botones: login + header
+  const onInstallClick = async () => {
+    // iOS: no hay prompt, toca “Add to Home Screen”
+    if (isIOS() && !__deferredInstallPrompt) {
+      toast("En iPhone/iPad: Compartir → “Agregar a pantalla de inicio”");
+      return;
+    }
+    if (!__deferredInstallPrompt) {
+      toast("Instalación no disponible todavía (abre en Chrome/Safari)");
+      return;
+    }
+
+    __deferredInstallPrompt.prompt();
+    const choice = await __deferredInstallPrompt.userChoice.catch(() => null);
+    __deferredInstallPrompt = null;
+
+    // Si canceló, escondemos por ahora para no fastidiar
+    if (!choice || choice.outcome !== "accepted") {
+      setInstallUI(false);
+      setTimeout(() => setInstallUI(true), 8000);
+      return;
+    }
+  };
+
+  const b1 = document.getElementById("btn-install");
+  const b2 = document.getElementById("btn-install-2");
+  if (b1) b1.addEventListener("click", onInstallClick);
+  if (b2) b2.addEventListener("click", onInstallClick);
+}
+
 /* ===========
    Render botones
 =========== */
@@ -222,4 +319,8 @@ function mount() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", mount);
+document.addEventListener("DOMContentLoaded", () => {
+  registerServiceWorker();
+  setupInstallPrompt();
+  mount();
+});
