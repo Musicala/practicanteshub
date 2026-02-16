@@ -1,26 +1,71 @@
-/* Musicala · Practicantes Hub (SIMPLE + Firebase Login, LIGHT ONLY) */
+/* ==========================================================================
+   Musicala · Practicantes Hub (SIMPLE + Firebase Login, LIGHT ONLY)
+   UI: Launcher iOS-like (Home Screen) — SOLO VISUAL (CSS)
+   - Sin tocar IDs ni JS
+   - Mobile-first, PWA-friendly, accesible
+========================================================================== */
 
 :root{
+  /* ===== Core palette ===== */
   --bg:#f6f8ff;
   --bg2:#eef2ff;
-  --card: rgba(255,255,255,.92);
+  --card: rgba(255,255,255,.88);
+  --card2: rgba(255,255,255,.94);
   --text:#0b1020;
   --muted: rgba(11,16,32,.65);
   --line: rgba(11,16,32,.12);
 
+  /* Musicala accents */
   --a1:#0C41C4; /* Azul Mozart */
   --a2:#680DBF; /* Violeta Beethoven */
   --a3:#CE0071; /* Magenta Brahms */
 
+  /* ===== Radii / shadows ===== */
   --r:18px;
   --shadow: 0 18px 44px rgba(11,16,32,.12);
   --shadow2: 0 10px 22px rgba(11,16,32,.08);
+
+  /* ===== Glass / blur ===== */
+  --blur: 16px;
+  --glass: rgba(255,255,255,.62);
+  --glass2: rgba(255,255,255,.78);
+
+  /* ===== Focus rings ===== */
+  --ring: 0 0 0 4px rgba(12,65,196,.14);
+  --ring2: 0 0 0 4px rgba(104,13,191,.12);
+  --ring3: 0 0 0 4px rgba(206,0,113,.10);
+
+  /* ===== Phone shell ===== */
+  --phoneW: min(430px, 96vw);
+  --phoneH: min(860px, calc(100vh - 28px));
+  --phoneRadius: 44px;
+  --notchW: 170px;
+  --notchH: 34px;
+
+  /* ===== Launcher icons ===== */
+  --iconSize: 66px;
+  --iconRadius: 20px;
+  --labelSize: 12.5px;
+  --tapScale: .965;
+
+  /* ===== Motion ===== */
+  --easeOut: cubic-bezier(.2,.9,.2,1);
+  --easeSoft: cubic-bezier(.2,.7,.2,1);
+  --durFast: 140ms;
+  --durMed: 240ms;
 }
 
+/* ===== Reset ===== */
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+img{ max-width:100%; display:block; }
+button{ font: inherit; }
+:focus{ outline:none; }
+
+/* ===== Page background (outside the device) ===== */
 body{
   margin:0;
+  padding: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   color:var(--text);
   background:
@@ -30,18 +75,163 @@ body{
     linear-gradient(180deg, var(--bg), var(--bg2));
 }
 
+/* Wrap: no “dashboard center”; el centro es el teléfono */
 .wrap{
   max-width: 980px;
   margin: 0 auto;
-  padding: 18px;
+  padding: 18px 0;
 }
 
-/* ===== Login ===== */
+/* ==========================================================================
+   PHONE SHELL (launcher feel)
+========================================================================== */
+.device{
+  width: var(--phoneW);
+  height: var(--phoneH);
+  margin: 14px auto;
+  border-radius: var(--phoneRadius);
+  background: rgba(255,255,255,.52);
+  border: 1px solid rgba(11,16,32,.12);
+  box-shadow: 0 30px 90px rgba(11,16,32,.18);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient blobs inside device */
+.device::before{
+  content:"";
+  position:absolute;
+  inset:-50px;
+  background:
+    radial-gradient(900px 520px at 10% 0%, rgba(12,65,196,.18), transparent 60%),
+    radial-gradient(780px 520px at 90% 10%, rgba(104,13,191,.16), transparent 62%),
+    radial-gradient(900px 620px at 40% 110%, rgba(206,0,113,.12), transparent 60%);
+  filter: blur(8px);
+  pointer-events:none;
+}
+
+/* Notch (simple, premium) */
+.deviceNotch{
+  position:absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--notchW);
+  height: var(--notchH);
+  background: rgba(0,0,0,.08);
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 50;
+}
+
+/* Screen viewport */
+.screen{
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  overflow: auto;
+  padding: 18px 16px 18px;
+}
+
+/* ==========================================================================
+   HEADER (frosted, iOS-ish)
+========================================================================== */
+.top{
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 10px 0 10px;
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+}
+
+/* Brand bar becomes subtle “pill” instead of big card */
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding: 12px 12px;
+  border-radius: 22px;
+  background: var(--glass);
+  border: 1px solid rgba(11,16,32,.10);
+  box-shadow: 0 10px 26px rgba(11,16,32,.10);
+  position:relative;
+  overflow:hidden;
+}
+
+/* Soft internal glow (Musicala accents) */
+.brand::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  background: linear-gradient(135deg,
+    rgba(12,65,196,.20),
+    rgba(104,13,191,.14),
+    rgba(206,0,113,.12)
+  );
+  opacity:.40;
+  filter: blur(18px);
+  pointer-events:none;
+}
+.brand > *{ position:relative; }
+
+.logoWrap{
+  width:44px; height:44px;
+  border-radius: 14px;
+  display:grid;
+  place-items:center;
+  background: linear-gradient(135deg, rgba(12,65,196,.14), rgba(104,13,191,.10));
+  border: 1px solid rgba(11,16,32,.10);
+  overflow:hidden;
+}
+.logoImg{ width: 82%; height: 82%; object-fit: contain; }
+.logoFallback{ display:none; font-size: 20px; }
+.logoWrap.fallback .logoFallback{ display:block; }
+
+.brandCopy{ flex:1; min-width: 0; }
+.brand h2{
+  margin:0;
+  font-size: 14.5px;
+  letter-spacing:.2px;
+  line-height: 1.1;
+}
+.brand p{
+  margin:2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ghost button (e.g. logout / install) */
+.btnGhost{
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(11,16,32,.14);
+  background: rgba(255,255,255,.78);
+  color: rgba(11,16,32,.82);
+  cursor:pointer;
+  font-weight: 650;
+  transition: transform var(--durFast) var(--easeSoft), border-color var(--durFast) var(--easeSoft), box-shadow var(--durFast) var(--easeSoft);
+}
+.btnGhost:hover{
+  border-color: rgba(12,65,196,.25);
+  box-shadow: 0 10px 22px rgba(11,16,32,.10);
+}
+.btnGhost:active{ transform: scale(var(--tapScale)); }
+
+/* ==========================================================================
+   LOGIN (kept premium, stays inside device screen)
+========================================================================== */
 .loginCard{
-  margin: 9vh auto 0;
+  margin: 10vh auto 0;
   max-width: 560px;
   border: 1px solid var(--line);
-  background: var(--card);
+  background: var(--card2);
   border-radius: 28px;
   padding: 24px 18px 18px;
   box-shadow: var(--shadow);
@@ -65,8 +255,7 @@ body{
   position:relative;
   overflow:hidden;
 }
-
-.markImg{ width: 82%; height: 82%; object-fit: contain; display:block; }
+.markImg{ width: 82%; height: 82%; object-fit: contain; }
 .markFallback{ display:none; font-size: 28px; }
 .mark.fallback .markFallback{ display:block; }
 
@@ -101,14 +290,14 @@ body{
   justify-content:center;
   gap:10px;
   box-shadow: var(--shadow2);
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  transition: transform var(--durFast) var(--easeSoft), box-shadow var(--durFast) var(--easeSoft), border-color var(--durFast) var(--easeSoft);
 }
 .btnGoogle:hover{
   transform: translateY(-1px);
   box-shadow: var(--shadow);
   border-color: rgba(12,65,196,.22);
 }
-.btnGoogle:active{ transform: translateY(0px) scale(.99); }
+.btnGoogle:active{ transform: translateY(0px) scale(var(--tapScale)); }
 
 .gIcon{
   width: 26px;
@@ -126,121 +315,223 @@ body{
   color: var(--muted);
   font-size: 12.5px;
   text-align:center;
-}
-
-/* ===== App header ===== */
-.top{ padding: 10px 2px 14px; }
-
-.brand{
   display:flex;
-  gap:12px;
   align-items:center;
-  padding: 14px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: var(--card);
-  box-shadow: var(--shadow2);
+  justify-content:center;
+  gap:10px;
 }
 
-.logoWrap{
-  width:44px; height:44px;
-  border-radius: 14px;
-  display:grid;
-  place-items:center;
-  background: linear-gradient(135deg, rgba(12,65,196,.16), rgba(104,13,191,.12));
-  border: 1px solid rgba(11,16,32,.10);
-  overflow:hidden;
+/* Install button on login if present */
+.loginActions .btnGhost{
+  height: 48px;
+  border-radius: 16px;
+  width: 100%;
 }
 
-.logoImg{ width: 82%; height: 82%; object-fit: contain; display:block; }
-.logoFallback{ display:none; font-size: 20px; }
-.logoWrap.fallback .logoFallback{ display:block; }
+/* ==========================================================================
+   LAUNCHER GRID (Apps as icons)
+========================================================================== */
 
-.brandCopy{ flex:1; min-width: 0; }
-.brand h2{ margin:0; font-size: 16px; letter-spacing:.2px; }
-.brand p{ margin:2px 0 0; font-size: 12.5px; color: var(--muted); }
-
-.btnGhost{
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(11,16,32,.14);
-  background: rgba(255,255,255,.78);
-  color: rgba(11,16,32,.80);
-  cursor:pointer;
-  font-weight: 650;
+/* Centro vertical del grid (home screen feel)
+   - Si hay header sticky y dock, esto sigue funcionando por padding/bottom. */
+.screen{
+  display: block;
 }
-.btnGhost:hover{ border-color: rgba(12,65,196,.25); }
 
-/* ===== Buttons grid ===== */
+/* Wrapper virtual: usa el grid mismo para centrar con padding inteligente */
 .grid{
   display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  padding: 6px 0 24px;
-}
-@media (min-width: 860px){
-  .grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 14px;
+  padding: 18px 6px 120px; /* deja espacio para dock */
+  margin: 0;
+  align-content: center; /* clave: centra vertical dentro del viewport */
+  min-height: calc(100% - 84px); /* resta aprox header */
 }
 
+/* Ajustes por tamaño */
+@media (max-width: 360px){
+  .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 520px){
+  .grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Cada tile se vuelve “app icon + label” */
 .tile{
   appearance:none;
-  border: 1px solid var(--line);
-  background: var(--card);
-  border-radius: var(--r);
-  padding: 14px 14px 12px;
-  text-align:left;
-  box-shadow: var(--shadow2);
-  cursor:pointer;
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-  min-height: 108px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--durFast) var(--easeSoft);
 }
 
-.tile:hover{
-  transform: translateY(-1px);
-  box-shadow: var(--shadow);
-  border-color: rgba(12,65,196,.25);
-}
-.tile:active{ transform: translateY(0px) scale(.99); }
+/* Micro elevación (hover) y press (active) */
+.tile:hover{ transform: translateY(-2px); }
+.tile:active{ transform: translateY(0px) scale(var(--tapScale)); }
 
+/* Foco accesible */
+.tile:focus-visible{
+  box-shadow: none;
+}
+.tile:focus-visible .ico{
+  box-shadow: var(--ring3), 0 16px 34px rgba(11,16,32,.14);
+  border-color: rgba(12,65,196,.28);
+}
+
+/* Contenido superior (si tu HTML lo tiene) */
 .tileTop{
   display:flex;
-  justify-content:space-between;
+  justify-content:center;
   align-items:center;
-  gap:10px;
-  margin-bottom: 8px;
+  gap: 0;
+  margin: 0;
 }
 
+/* Icon: look de app instalada */
 .ico{
-  width:40px;
-  height:40px;
-  border-radius: 14px;
+  width: var(--iconSize);
+  height: var(--iconSize);
+  border-radius: var(--iconRadius);
   display:grid;
   place-items:center;
-  background: linear-gradient(135deg, rgba(12,65,196,.12), rgba(206,0,113,.10));
+
+  background: rgba(255,255,255,.92);
   border: 1px solid rgba(11,16,32,.10);
-  font-size: 18px;
+  box-shadow: 0 12px 26px rgba(11,16,32,.12);
+
+  font-size: 26px;
+  position: relative;
+  overflow:hidden;
+
+  transition:
+    transform var(--durFast) var(--easeSoft),
+    box-shadow var(--durFast) var(--easeSoft),
+    border-color var(--durFast) var(--easeSoft);
 }
 
+/* Soft sheen on hover */
+.ico::after{
+  content:"";
+  position:absolute;
+  inset:-40% -60%;
+  background: radial-gradient(closest-side, rgba(255,255,255,.60), transparent 60%);
+  transform: translateX(-40%) rotate(12deg);
+  opacity: 0;
+  transition: opacity var(--durFast) var(--easeSoft), transform var(--durMed) var(--easeOut);
+  pointer-events:none;
+}
+.tile:hover .ico::after{
+  opacity:.34;
+  transform: translateX(10%) rotate(12deg);
+}
+
+.tile:hover .ico{
+  box-shadow: 0 16px 34px rgba(11,16,32,.16);
+  border-color: rgba(12,65,196,.18);
+}
+
+/* Badge (si existe) lo llevamos arriba a la derecha tipo “notif” */
 .badge{
-  font-size: 12px;
-  padding: 6px 10px;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 11px;
+  padding: 6px 9px;
   border-radius: 999px;
   border: 1px solid rgba(11,16,32,.14);
   color: rgba(11,16,32,.70);
-  background: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.90);
+  box-shadow: 0 10px 20px rgba(11,16,32,.10);
 }
 .badge.ok{
   border-color: rgba(12,65,196,.25);
-  color: rgba(12,65,196,.9);
+  color: rgba(12,65,196,.90);
   background: rgba(12,65,196,.08);
 }
+
+/* Text underneath icon */
+.tileText{ margin-top: 10px; }
+.tTitle{
+  font-weight: 780;
+  font-size: var(--labelSize);
+  line-height: 1.15;
+  margin: 0;
+}
+.tSub{
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.15;
+  opacity: .74;
+}
+
+/* Pending state */
 .tile.pending{ opacity: .92; }
 
-.tTitle{ font-weight: 780; font-size: 14px; line-height: 1.15; }
-.tSub{ margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+/* ==========================================================================
+   DOCK (actions) - optional
+   Si tu HTML tiene .actions, queda como dock fijo
+========================================================================== */
+.actions{
+  position: sticky;
+  bottom: 12px;
+  z-index: 45;
 
-/* ===== Toast ===== */
+  width: 100%;
+  padding: 10px;
+
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(11,16,32,.10);
+  border-radius: 24px;
+  box-shadow: 0 18px 40px rgba(11,16,32,.12);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Si dentro hay botones, que se vean docky */
+.actions .btnGhost{
+  width: 100%;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   STAGGER ENTRY (subtle)
+   No depende de JS. Si prefieres sin animación, borra este bloque.
+========================================================================== */
+@keyframes popIn{
+  from{ opacity: 0; transform: translateY(6px) scale(.985); }
+  to{ opacity: 1; transform: translateY(0) scale(1); }
+}
+.grid .tile{
+  opacity: 0;
+  animation: popIn 420ms var(--easeOut) forwards;
+}
+.grid .tile:nth-child(1){ animation-delay: 0ms; }
+.grid .tile:nth-child(2){ animation-delay: 40ms; }
+.grid .tile:nth-child(3){ animation-delay: 80ms; }
+.grid .tile:nth-child(4){ animation-delay: 120ms; }
+.grid .tile:nth-child(5){ animation-delay: 160ms; }
+.grid .tile:nth-child(6){ animation-delay: 200ms; }
+.grid .tile:nth-child(7){ animation-delay: 240ms; }
+.grid .tile:nth-child(8){ animation-delay: 280ms; }
+.grid .tile:nth-child(9){ animation-delay: 320ms; }
+.grid .tile:nth-child(n+10){ animation-delay: 360ms; }
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .grid .tile{ opacity: 1; animation: none; }
+  .tile, .ico, .btnGoogle, .btnGhost, .toast{ transition: none !important; }
+}
+
+/* ==========================================================================
+   TOAST (kept)
+========================================================================== */
 .toast{
   position: fixed;
   left: 50%;
@@ -248,25 +539,67 @@ body{
   transform: translateX(-50%) translateY(12px);
   opacity: 0;
   pointer-events:none;
+
   background: rgba(255,255,255,.92);
   border: 1px solid rgba(11,16,32,.14);
   box-shadow: var(--shadow);
   border-radius: 999px;
   padding: 10px 14px;
+
   color: rgba(11,16,32,.85);
   max-width: min(680px, calc(100vw - 24px));
   text-align:center;
-  transition: opacity .18s ease, transform .18s ease;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+
+  transition: opacity 180ms var(--easeSoft), transform 180ms var(--easeSoft);
+  z-index: 999;
 }
 .toast.show{
   opacity: 1;
   transform: translateX(-50%) translateY(0px);
 }
+.toastMsg{ display:inline-block; }
+.toastBtn{
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(11,16,32,.14);
+  background: rgba(255,255,255,.86);
+  cursor:pointer;
+  font-weight: 750;
+  color: rgba(11,16,32,.88);
+  transition: transform var(--durFast) var(--easeSoft), border-color var(--durFast) var(--easeSoft);
+  white-space: nowrap;
+}
+.toastBtn:hover{ border-color: rgba(12,65,196,.28); transform: translateY(-1px); }
+.toastBtn:active{ transform: translateY(0px) scale(var(--tapScale)); }
 
+/* ==========================================================================
+   ACCESSIBILITY focus
+========================================================================== */
+:focus-visible{
+  box-shadow: var(--ring);
+  border-color: rgba(12,65,196,.28) !important;
+}
+.btnGhost:focus-visible{ box-shadow: var(--ring2); }
+.btnGoogle:focus-visible{ box-shadow: var(--ring); }
 
-/* ===== PWA install button (login) ===== */
-.loginActions .btnGhost{
-  height: 48px;
-  border-radius: 16px;
-  width: 100%;
+/* ==========================================================================
+   SMALL HEIGHT tweaks
+========================================================================== */
+@media (max-height: 720px){
+  :root{
+    --phoneH: calc(100vh - 18px);
+    --phoneRadius: 36px;
+    --notchW: 150px;
+    --notchH: 28px;
+  }
+  .grid{
+    padding-bottom: 100px;
+    min-height: calc(100% - 76px);
+  }
 }
