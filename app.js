@@ -3,6 +3,8 @@
    - Panel de botones simple
    - Conexiones: pegas URLs en LINKS
 */
+const BUILD = "2026-02-15.2";
+
 
 /* ===========
    1) Firebase Config (YA LISTO)
@@ -50,6 +52,8 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -67,13 +71,43 @@ function escapeHtml(str) {
 }
 
 let toastTimer = null;
-function toast(msg) {
+/**
+ * Toast con acción opcional.
+ * toast("Mensaje", { actionText:"Actualizar", onAction:()=>{}, sticky:true, ms:5000 })
+ */
+function toast(msg, opts = {}) {
   const el = $("#toast");
   if (!el) return;
-  el.textContent = msg;
-  el.classList.add("show");
+
+  const { actionText = "", onAction = null, sticky = false, ms = 2600 } = opts || {};
+
+  // Reset
+  el.classList.remove("show");
+  el.innerHTML = "";
+
+  const msgSpan = document.createElement("span");
+  msgSpan.className = "toastMsg";
+  msgSpan.textContent = String(msg ?? "");
+  el.appendChild(msgSpan);
+
+  if (actionText) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "toastBtn";
+    btn.textContent = actionText;
+    btn.addEventListener("click", () => {
+      try { onAction && onAction(); } finally { el.classList.remove("show"); }
+    });
+    el.appendChild(btn);
+  }
+
+  // Show
+  requestAnimationFrame(() => el.classList.add("show"));
+
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
+  if (!sticky) {
+    toastTimer = setTimeout(() => el.classList.remove("show"), Math.max(1200, Number(ms) || 2600));
+  }
 }
 
 function show(which) {
@@ -117,20 +151,66 @@ function setInstallUI(visible) {
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
 
+  const promptUpdate = (reg) => {
+    // reg.waiting = nueva versión lista, esperando “tomar control”
+    if (!reg || !reg.waiting) return;
+
+    toast("Hay una actualización lista ✨", {
+      actionText: "Actualizar",
+      sticky: true,
+      onAction: () => {
+        try {
+          reg.waiting.postMessage({ type: "SKIP_WAITING" });
+          // El reload se hace en controllerchange
+        } catch (e) {
+          console.warn("No se pudo activar update", e);
+          toast("No se pudo actualizar, recarga la página 🙃");
+        }
+      }
+    });
+  };
+
   try {
     const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
 
-    // Si hay update, aplica “refresh” suave
+    // Si ya hay una versión esperando (por ejemplo después de navegar)
+    promptUpdate(reg);
+
+    // Cuando aparece una nueva versión
     reg.addEventListener("updatefound", () => {
       const sw = reg.installing;
       if (!sw) return;
+
       sw.addEventListener("statechange", () => {
         if (sw.state === "installed" && navigator.serviceWorker.controller) {
-          // Hay una nueva versión lista
-          toast("Actualización lista ✅ Cierra y vuelve a abrir la app");
+          // Nueva versión lista
+          promptUpdate(reg);
         }
       });
     });
+
+    // Cuando el SW nuevo toma control: recargamos para usar assets nuevos
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      // Evitar loops raros
+      if (window.__reloadingForSW) return;
+      window.__reloadingForSW = true;
+      window.location.reload();
+    });
+
+    // Mensajes del SW (opcional, útil para debug)
+    navigator.serviceWorker.addEventListener("message", (ev) => {
+      const data = ev.data || {};
+      if (data.type === "SW_ACTIVATED") {
+        // No spameamos: solo mostramos en standalone o si ya estaba abierta
+        if (navigator.serviceWorker.controller) {
+          console.log("SW activo:", data.version);
+        }
+      }
+    });
+
+    // Chequeo “por si acaso”: fuerza a que el navegador pregunte por update
+    // (GitHub Pages a veces es perezoso con caché)
+    reg.update?.().catch(() => null);
   } catch (e) {
     console.warn("SW no se pudo registrar", e);
   }
@@ -251,7 +331,12 @@ async function doGoogleLogin(auth) {
   provider.setCustomParameters({ prompt: "select_account" });
 
   try {
-    await signInWithPopup(auth, provider);
+    if (isStandalone()) {
+      // En modo app instalada, los popups suelen ser bloqueados.
+      await signInWithRedirect(auth, provider);
+    } else {
+      await signInWithPopup(auth, provider);
+    }
     // onAuthStateChanged se encarga del resto
   } catch (err) {
     const code = err?.code || "";
@@ -301,6 +386,10 @@ function mount() {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
+  // Si venimos de un login por redirect (modo app instalada), esto lo completa.
+  getRedirectResult(auth).catch(() => {});
+
+
   const btnGoogle = $("#btn-google");
   const btnOut = $("#btn-logout");
   const userLine = $("#user-line");
@@ -320,6 +409,8 @@ function mount() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("BUILD", BUILD);
+
   registerServiceWorker();
   setupInstallPrompt();
   mount();
