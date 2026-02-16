@@ -3,8 +3,7 @@
    - Panel de botones simple
    - Conexiones: pegas URLs en LINKS
 */
-const BUILD = "2026-02-15.2";
-
+const BUILD = "2026-02-16.1";
 
 /* ===========
    1) Firebase Config (YA LISTO)
@@ -55,7 +54,9 @@ import {
   signInWithRedirect,
   getRedirectResult,
   onAuthStateChanged,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 /* ===========
@@ -81,7 +82,6 @@ function toast(msg, opts = {}) {
 
   const { actionText = "", onAction = null, sticky = false, ms = 2600 } = opts || {};
 
-  // Reset
   el.classList.remove("show");
   el.innerHTML = "";
 
@@ -101,7 +101,6 @@ function toast(msg, opts = {}) {
     el.appendChild(btn);
   }
 
-  // Show
   requestAnimationFrame(() => el.classList.add("show"));
 
   clearTimeout(toastTimer);
@@ -123,7 +122,6 @@ function show(which) {
     vApp.hidden = false;
   }
 }
-
 
 /* ===========
    PWA: install + SW
@@ -152,7 +150,6 @@ async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
 
   const promptUpdate = (reg) => {
-    // reg.waiting = nueva versión lista, esperando “tomar control”
     if (!reg || !reg.waiting) return;
 
     toast("Hay una actualización lista ✨", {
@@ -161,7 +158,6 @@ async function registerServiceWorker() {
       onAction: () => {
         try {
           reg.waiting.postMessage({ type: "SKIP_WAITING" });
-          // El reload se hace en controllerchange
         } catch (e) {
           console.warn("No se pudo activar update", e);
           toast("No se pudo actualizar, recarga la página 🙃");
@@ -173,43 +169,34 @@ async function registerServiceWorker() {
   try {
     const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
 
-    // Si ya hay una versión esperando (por ejemplo después de navegar)
     promptUpdate(reg);
 
-    // Cuando aparece una nueva versión
     reg.addEventListener("updatefound", () => {
       const sw = reg.installing;
       if (!sw) return;
 
       sw.addEventListener("statechange", () => {
         if (sw.state === "installed" && navigator.serviceWorker.controller) {
-          // Nueva versión lista
           promptUpdate(reg);
         }
       });
     });
 
-    // Cuando el SW nuevo toma control: recargamos para usar assets nuevos
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      // Evitar loops raros
       if (window.__reloadingForSW) return;
       window.__reloadingForSW = true;
       window.location.reload();
     });
 
-    // Mensajes del SW (opcional, útil para debug)
     navigator.serviceWorker.addEventListener("message", (ev) => {
       const data = ev.data || {};
       if (data.type === "SW_ACTIVATED") {
-        // No spameamos: solo mostramos en standalone o si ya estaba abierta
         if (navigator.serviceWorker.controller) {
           console.log("SW activo:", data.version);
         }
       }
     });
 
-    // Chequeo “por si acaso”: fuerza a que el navegador pregunte por update
-    // (GitHub Pages a veces es perezoso con caché)
     reg.update?.().catch(() => null);
   } catch (e) {
     console.warn("SW no se pudo registrar", e);
@@ -217,29 +204,24 @@ async function registerServiceWorker() {
 }
 
 function setupInstallPrompt() {
-  // Si ya está instalada, no molestamos
   if (isStandalone()) {
     setInstallUI(false);
     return;
   }
 
-  // Android/Chromium: evento nativo
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     __deferredInstallPrompt = e;
     setInstallUI(true);
   });
 
-  // Cuando se instala
   window.addEventListener("appinstalled", () => {
     __deferredInstallPrompt = null;
     setInstallUI(false);
     toast("Instalada ✨");
   });
 
-  // Botones: login + header
   const onInstallClick = async () => {
-    // iOS: no hay prompt, toca “Add to Home Screen”
     if (isIOS() && !__deferredInstallPrompt) {
       toast("En iPhone/iPad: Compartir → “Agregar a pantalla de inicio”");
       return;
@@ -253,7 +235,6 @@ function setupInstallPrompt() {
     const choice = await __deferredInstallPrompt.userChoice.catch(() => null);
     __deferredInstallPrompt = null;
 
-    // Si canceló, escondemos por ahora para no fastidiar
     if (!choice || choice.outcome !== "accepted") {
       setInstallUI(false);
       setTimeout(() => setInstallUI(true), 8000);
@@ -296,7 +277,6 @@ function renderButtons() {
     `;
   }).join("");
 
-  // Importante: evita duplicar listeners si renderizas más de una vez
   if (!grid.__boundClick) {
     grid.__boundClick = true;
     grid.addEventListener("click", (e) => {
@@ -324,29 +304,39 @@ function prettyName(user) {
   return name ? name : (email ? email : "Sesión activa");
 }
 
+function friendlyAuthError(code = "") {
+  // Mensajes cortos para humanos (sí, ustedes).
+  if (code === "auth/unauthorized-domain") return "Dominio no autorizado en Firebase Auth (Authorized domains).";
+  if (code === "auth/popup-blocked") return "El navegador bloqueó el popup. En modo app instalada usamos redirect.";
+  if (code === "auth/cancelled-popup-request") return "Se canceló el popup de inicio de sesión.";
+  if (code === "auth/popup-closed-by-user") return "Cerraste el login.";
+  if (code === "auth/network-request-failed") return "Falló la red. Revisa internet.";
+  return "";
+}
+
 async function doGoogleLogin(auth) {
   const provider = new GoogleAuthProvider();
-
-  // Si quieren forzar selector de cuentas siempre:
   provider.setCustomParameters({ prompt: "select_account" });
 
   try {
+    // Persistencia fuerte: clave para PWA instalada
+    await setPersistence(auth, browserLocalPersistence);
+
     if (isStandalone()) {
-      // En modo app instalada, los popups suelen ser bloqueados.
+      // PWA instalada: redirect es el flujo confiable
       await signInWithRedirect(auth, provider);
+      return; // la app vuelve por redirect
     } else {
       await signInWithPopup(auth, provider);
+      // onAuthStateChanged hará el resto
     }
-    // onAuthStateChanged se encarga del resto
   } catch (err) {
     const code = err?.code || "";
     if (code === "auth/popup-closed-by-user") return;
 
-    // Errores típicos útiles:
-    // auth/unauthorized-domain => falta agregar dominio en Firebase Auth > Authorized domains
-    // auth/popup-blocked => navegador bloqueó popups
-    toast("No se pudo iniciar sesión");
-    console.error(err);
+    const friendly = friendlyAuthError(code);
+    toast(friendly ? `No se pudo iniciar sesión: ${friendly}` : "No se pudo iniciar sesión");
+    console.error("Login error:", err);
   }
 }
 
@@ -376,7 +366,27 @@ function assertConfig(cfg) {
   return false;
 }
 
-function mount() {
+async function finalizeRedirectIfAny(auth) {
+  // En standalone, si volvemos de redirect, esto “cierra” el flujo.
+  // Importante: no tirar error a UI si no hay redirect pendiente.
+  try {
+    const res = await getRedirectResult(auth);
+    if (res?.user) {
+      console.log("Redirect login OK:", res.user.email || res.user.uid);
+    }
+  } catch (err) {
+    const code = err?.code || "";
+    // Si no hay redirect result, Firebase suele devolver null sin error.
+    // Si hay error real, sí lo mostramos.
+    if (code) {
+      const friendly = friendlyAuthError(code);
+      toast(friendly ? `Login redirect falló: ${friendly}` : "Login redirect falló");
+      console.warn("Redirect result error:", err);
+    }
+  }
+}
+
+async function mount() {
   if (!assertConfig(firebaseConfig)) {
     show("login");
     toast("Falta configurar Firebase en app.js");
@@ -386,9 +396,15 @@ function mount() {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  // Si venimos de un login por redirect (modo app instalada), esto lo completa.
-  getRedirectResult(auth).catch(() => {});
+  // 1) Persistencia antes de todo
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch (e) {
+    console.warn("No se pudo setPersistence:", e);
+  }
 
+  // 2) Si venimos de redirect, resolverlo temprano (PWA)
+  await finalizeRedirectIfAny(auth);
 
   const btnGoogle = $("#btn-google");
   const btnOut = $("#btn-logout");
@@ -397,6 +413,7 @@ function mount() {
   if (btnGoogle) btnGoogle.addEventListener("click", () => doGoogleLogin(auth));
   if (btnOut) btnOut.addEventListener("click", () => doLogout(auth));
 
+  // 3) Estado auth: fuente de verdad
   onAuthStateChanged(auth, (user) => {
     if (user) {
       if (userLine) userLine.textContent = prettyName(user);
