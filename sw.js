@@ -4,7 +4,8 @@
    - Navegación: network-first con fallback offline a index.html
    - Assets same-origin: stale-while-revalidate
 */
-const VERSION = "v3";
+const BUILD = "2026-02-15.1";
+const VERSION = "v3-" + BUILD;
 const CACHE_STATIC = `practicantes-static-${VERSION}`;
 const CACHE_RUNTIME = `practicantes-runtime-${VERSION}`;
 
@@ -18,6 +19,14 @@ const CORE_ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png"
 ];
+
+
+self.addEventListener("message", (event) => {
+  const data = event.data || {};
+  if (data && data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -41,7 +50,13 @@ self.addEventListener("activate", (event) => {
       keys.map((k) => (k === CACHE_STATIC || k === CACHE_RUNTIME) ? null : caches.delete(k))
     );
     self.clients.claim();
-  })());
+
+    // Avisar a las pestañas abiertas que hay una versión activa
+    const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of clients) {
+      client.postMessage({ type: "SW_ACTIVATED", version: VERSION });
+    }
+})());
 });
 
 self.addEventListener("fetch", (event) => {
