@@ -21,11 +21,11 @@ const firebaseConfig = {
    2) URLs (cuando las tengas)
 =========== */
 const LINKS = {
-  jornada: "",
-  induccion: "",
-  apuntes: "",
-  observacion: "",
-  bitacora: "",
+  jornada: "https://musicalaescuela.github.io/ingresoysalidapracticanteslea/",
+  induccion: "https://musicalaescuela.github.io/inducciondocentesmusicala/",
+  apuntes: "https://musicalaescuela.github.io/verificaci-nestudiantes/",
+  observacion: "https://docs.google.com/forms/u/0/d/1z8TEQACP6L8d0vTWEpSl2RQJ198PwQwzH4-UKqq9EQA/viewform?edit_requested=true",
+  bitacora: "https://musicalaescuela.github.io/registrodeclasemusicala/",
   horario: "",
   evaluacion: ""
 };
