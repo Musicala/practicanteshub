@@ -3,7 +3,7 @@
    - Panel de botones simple
    - Conexiones: pegas URLs en LINKS
 */
-const BUILD = "2026-02-16.1";
+const BUILD = "2026-03-21.1";
 
 /* ===========
    1) Firebase Config (YA LISTO)
@@ -21,12 +21,13 @@ const firebaseConfig = {
    2) URLs (cuando las tengas)
 =========== */
 const LINKS = {
-  jornada: "https://musicalaescuela.github.io/ingresoysalidapracticanteslea/",
+  jornada:   "https://musicalaescuela.github.io/ingresoysalidapracticanteslea/",
   induccion: "https://musicalaescuela.github.io/inducciondocentesmusicala/",
-  apuntes: "https://musicalaescuela.github.io/verificaci-nestudiantes/",
+  apuntes:   "https://musicalaescuela.github.io/verificaci-nestudiantes/",
   observacion: "https://docs.google.com/forms/u/0/d/1z8TEQACP6L8d0vTWEpSl2RQJ198PwQwzH4-UKqq9EQA/viewform?edit_requested=true",
-  bitacora: "https://musicalaescuela.github.io/registrodeclasemusicala/",
-  horario: "",
+  bitacora:  "https://musicalaescuela.github.io/registrodeclasemusicala/",
+  salones:   "https://musicala.github.io/asignaciondesalones/",
+  horario:   "",
   evaluacion: ""
 };
 
@@ -34,13 +35,14 @@ const LINKS = {
    3) Botones
 =========== */
 const BUTTONS = [
-  { id: "jornada",     icon: "⏱️", title: "Registro de jornada", subtitle: "Ingreso y salida" },
-  { id: "induccion",   icon: "🧭", title: "Inducción general", subtitle: "CREA · normas · rutas" },
-  { id: "apuntes",     icon: "📚", title: "Apuntes y tareas", subtitle: "Estudiantes" },
-  { id: "observacion", icon: "👀", title: "Formulario de observación", subtitle: "Observación de clase" },
-  { id: "bitacora",    icon: "🗒️", title: "Bitácora de clase", subtitle: "Registro rápido" },
-  { id: "horario",     icon: "📅", title: "Horario del semestre", subtitle: "Semana a semana" },
-  { id: "evaluacion",  icon: "✅", title: "Evaluación y retro", subtitle: "Seguimiento" }
+  { id: "jornada",     icon: "⏱️", title: "Registro de jornada",       subtitle: "Ingreso y salida" },
+  { id: "induccion",   icon: "🧭", title: "Inducción general",          subtitle: "CREA · normas · rutas" },
+  { id: "apuntes",     icon: "📚", title: "Apuntes y tareas",           subtitle: "Estudiantes" },
+  { id: "observacion", icon: "👀", title: "Formulario de observación",  subtitle: "Observación de clase" },
+  { id: "bitacora",    icon: "🗒️", title: "Bitácora de clase",          subtitle: "Registro rápido" },
+  { id: "salones",     icon: "🏫", title: "Asignación de salones",      subtitle: "Horario por salón del día" },
+  { id: "horario",     icon: "📅", title: "Horario del semestre",       subtitle: "Semana a semana" },
+  { id: "evaluacion",  icon: "✅", title: "Evaluación y retro",         subtitle: "Seguimiento" }
 ];
 
 /* ===========
@@ -223,7 +225,7 @@ function setupInstallPrompt() {
 
   const onInstallClick = async () => {
     if (isIOS() && !__deferredInstallPrompt) {
-      toast("En iPhone/iPad: Compartir → “Agregar a pantalla de inicio”");
+      toast("En iPhone/iPad: Compartir → "Agregar a pantalla de inicio"");
       return;
     }
     if (!__deferredInstallPrompt) {
@@ -287,7 +289,7 @@ function renderButtons() {
       const url = String(LINKS[id] || "").trim();
 
       if (!url) {
-        toast("Pendiente: falta pegar el link de “" + id + "” en app.js");
+        toast("Pendiente: falta pegar el link de "" + id + "" en app.js");
         return;
       }
       window.open(url, "_blank", "noopener,noreferrer");
@@ -367,7 +369,7 @@ function assertConfig(cfg) {
 }
 
 async function finalizeRedirectIfAny(auth) {
-  // En standalone, si volvemos de redirect, esto “cierra” el flujo.
+  // En standalone, si volvemos de redirect, esto "cierra" el flujo.
   // Importante: no tirar error a UI si no hay redirect pendiente.
   try {
     const res = await getRedirectResult(auth);
