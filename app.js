@@ -3,7 +3,7 @@
    - Panel de botones simple
    - Conexiones: pegas URLs en LINKS
 */
-const BUILD = "2026-03-21.1";
+const BUILD = "2026-04-25.1";
 
 /* ===========
    1) Firebase Config (YA LISTO)
@@ -225,7 +225,7 @@ function setupInstallPrompt() {
 
   const onInstallClick = async () => {
     if (isIOS() && !__deferredInstallPrompt) {
-      toast("En iPhone/iPad: Compartir → "Agregar a pantalla de inicio"");
+      toast('En iPhone/iPad: Compartir -> "Agregar a pantalla de inicio"');
       return;
     }
     if (!__deferredInstallPrompt) {
@@ -289,7 +289,7 @@ function renderButtons() {
       const url = String(LINKS[id] || "").trim();
 
       if (!url) {
-        toast("Pendiente: falta pegar el link de "" + id + "" en app.js");
+        toast(`Pendiente: falta pegar el link de "${id}" en app.js`);
         return;
       }
       window.open(url, "_blank", "noopener,noreferrer");
