@@ -37,9 +37,9 @@ const LINKS = {
 const BUTTONS = [
   { id: "jornada",     icon: "⏱️", title: "Registro de jornada",       subtitle: "Ingreso y salida" },
   { id: "induccion",   icon: "🧭", title: "Inducción general",          subtitle: "CREA · normas · rutas" },
-  { id: "apuntes",     icon: "📚", title: "Apuntes y tareas",           subtitle: "Estudiantes" },
+  { id: "apuntes",     icon: "📚", title: "Historial de Bitacoras de clase",           subtitle: "Estudiantes" },
   { id: "observacion", icon: "👀", title: "Formulario de observación",  subtitle: "Observación de clase" },
-  { id: "bitacora",    icon: "🗒️", title: "Bitácora de clase",          subtitle: "Registro rápido" },
+  { id: "bitacora",    icon: "🗒️", title: "Registar Bitácora de clase",          subtitle: "Registro rápido" },
   { id: "salones",     icon: "🏫", title: "Asignación de salones",      subtitle: "Horario por salón del día" },
   { id: "horario",     icon: "📅", title: "Horario del semestre",       subtitle: "Semana a semana" },
   { id: "evaluacion",  icon: "✅", title: "Evaluación y retro",         subtitle: "Seguimiento" }
